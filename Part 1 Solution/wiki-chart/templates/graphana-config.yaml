@@ -1,0 +1,100 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-datasource
+  labels:
+    app: grafana
+    release: {{ .Release.Name }}
+data:
+  datasource.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://{{ .Release.Name }}-prometheus:9090
+        isDefault: true
+        editable: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-dashboard-provider
+  labels:
+    app: grafana
+    release: {{ .Release.Name }}
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: ''
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 10
+        allowUiUpdates: true
+        options:
+          path: /etc/grafana/provisioning/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-grafana-dashboard
+  labels:
+    app: grafana
+    release: {{ .Release.Name }}
+data:
+  creation-dashboard.json: |
+    {
+      "uid": "creation-dashboard-678",
+      "title": "User and Post Creation Rate",
+      "tags": ["fastapi"],
+      "timezone": "browser",
+      "schemaVersion": 16,
+      "version": 0,
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "Users and Posts Creation Rate",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 12
+          },
+          "id": 1,
+          "targets": [
+            {
+              "expr": "rate(users_created_total[1m])",
+              "legendFormat": "Users Created/sec",
+              "refId": "A"
+            },
+            {
+              "expr": "rate(posts_created_total[1m])",
+              "legendFormat": "Posts Created/sec",
+              "refId": "B"
+            }
+          ],
+          "yaxes": [
+            {
+              "format": "short",
+              "label": "Rate (per second)"
+            },
+            {
+              "format": "short"
+            }
+          ],
+          "xaxis": {
+            "mode": "time"
+          },
+          "lines": true,
+          "fill": 1,
+          "linewidth": 2,
+          "datasource": "Prometheus"
+        }
+      ]
+    }
+{{- end }}
