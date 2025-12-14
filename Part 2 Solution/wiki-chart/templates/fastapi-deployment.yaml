@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-fastapi
+  labels:
+    app: fastapi
+    release: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.fastapi.replicas }}
+  selector:
+    matchLabels:
+      app: fastapi
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: fastapi
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: fastapi
+        image: "{{ .Values.fastapi.image_name }}:{{ .Values.fastapi.image_tag }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: DATABASE_URL
+          value: "postgresql+asyncpg://{{ .Values.postgresql.auth.username }}:{{ .Values.postgresql.auth.password }}@{{ .Release.Name }}-postgresql:5432/{{ .Values.postgresql.auth.database }}"
+        resources:
+          {{- toYaml .Values.fastapi.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
