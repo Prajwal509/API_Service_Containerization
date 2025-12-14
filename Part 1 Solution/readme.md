@@ -1,3 +1,7 @@
+# Part 1: Environment as Helm Chart
+
+## Directory Structure Required
+```
 /
 ├── wiki-service/
 │   ├── Dockerfile
@@ -28,3 +32,5 @@
         ├── grafana-service.yaml
         ├── grafana-pvc.yaml
         └── ingress.yaml
+
+```
